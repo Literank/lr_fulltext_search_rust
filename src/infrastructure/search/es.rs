@@ -57,10 +57,12 @@ impl BookManager for ElasticSearchEngine {
             .await?;
         let response_body = response.json::<Value>().await?;
         let mut books: Vec<model::Book> = vec![];
-        for hit in response_body["hits"]["hits"].as_array().unwrap() {
-            let source = hit["_source"].clone();
-            let book: model::Book = serde_json::from_value(source).unwrap();
-            books.push(book);
+        if let Some(hits) = response_body["hits"]["hits"].as_array() {
+            for hit in hits {
+                let source = hit["_source"].clone();
+                let book: model::Book = serde_json::from_value(source).unwrap();
+                books.push(book);
+            }
         }
         Ok(books)
     }
