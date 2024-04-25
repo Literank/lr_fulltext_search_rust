@@ -8,18 +8,21 @@ use serde_json::{json, Value};
 use crate::domain::gateway::BookManager;
 use crate::domain::model;
 
-const INDEX_BOOK: &str = "book_idx";
-
 pub struct ElasticSearchEngine {
     client: Elasticsearch,
+    index: String,
     page_size: u32,
 }
 
 impl ElasticSearchEngine {
-    pub fn new(address: &str, page_size: u32) -> Result<Self, Box<dyn Error>> {
+    pub fn new(address: &str, index: &str, page_size: u32) -> Result<Self, Box<dyn Error>> {
         let transport = Transport::single_node(address)?;
         let client = Elasticsearch::new(transport);
-        Ok(ElasticSearchEngine { client, page_size })
+        Ok(ElasticSearchEngine {
+            client,
+            index: index.to_string(),
+            page_size,
+        })
     }
 }
 
@@ -28,7 +31,7 @@ impl BookManager for ElasticSearchEngine {
     async fn index_book(&self, b: &model::Book) -> Result<String, Box<dyn Error>> {
         let response = self
             .client
-            .index(IndexParts::Index(INDEX_BOOK))
+            .index(IndexParts::Index(&self.index))
             .body(b)
             .send()
             .await?;
@@ -39,7 +42,7 @@ impl BookManager for ElasticSearchEngine {
     async fn search_books(&self, q: &str) -> Result<Vec<model::Book>, Box<dyn Error>> {
         let response = self
             .client
-            .search(SearchParts::Index(&[INDEX_BOOK]))
+            .search(SearchParts::Index(&[&self.index]))
             .from(0)
             .size(self.page_size as i64)
             .body(json!({

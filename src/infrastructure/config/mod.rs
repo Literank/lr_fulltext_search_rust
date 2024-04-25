@@ -11,6 +11,7 @@ pub struct Config {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SearchConfig {
     pub address: String,
+    pub index: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

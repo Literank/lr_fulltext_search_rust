@@ -12,6 +12,7 @@ impl WireHelper {
     pub fn new(c: &Config) -> Result<Self, Box<dyn std::error::Error>> {
         let engine = Arc::new(search::ElasticSearchEngine::new(
             &c.search.address,
+            &c.search.index,
             c.app.page_size,
         )?);
         Ok(WireHelper { engine })
