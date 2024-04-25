@@ -16,6 +16,7 @@ pub struct SearchConfig {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ApplicationConfig {
     pub port: i32,
+    pub page_size: u32,
 }
 
 pub fn parse_config(file_name: &str) -> Config {

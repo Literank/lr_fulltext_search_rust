@@ -1,10 +1,11 @@
 use axum::{
-    extract::{Json, State},
+    extract::{Json, Query, State},
     http::StatusCode,
     response::IntoResponse,
     routing::{get, post},
     Router,
 };
+use serde::Deserialize;
 use std::sync::Arc;
 
 use serde_json::json;
@@ -12,6 +13,11 @@ use serde_json::json;
 use crate::application;
 use crate::application::executor;
 use crate::domain::model;
+
+#[derive(Deserialize)]
+struct QueryParams {
+    q: String,
+}
 
 pub struct RestHandler {
     book_operator: executor::BookOperator,
@@ -23,6 +29,16 @@ async fn create_book(
 ) -> Result<Json<serde_json::Value>, impl IntoResponse> {
     match rest_handler.book_operator.create_book(book).await {
         Ok(book_id) => Ok(Json(json!({"id": book_id}))),
+        Err(err) => Err((StatusCode::INTERNAL_SERVER_ERROR, err.to_string())),
+    }
+}
+
+async fn search_books(
+    State(rest_handler): State<Arc<RestHandler>>,
+    Query(params): Query<QueryParams>,
+) -> Result<Json<Vec<model::Book>>, impl IntoResponse> {
+    match rest_handler.book_operator.search_books(&params.q).await {
+        Ok(books) => Ok(Json(books)),
         Err(err) => Err((StatusCode::INTERNAL_SERVER_ERROR, err.to_string())),
     }
 }
@@ -40,5 +56,6 @@ pub fn make_router(wire_helper: &application::WireHelper) -> Router {
     Router::new()
         .route("/", get(welcome))
         .route("/books", post(create_book))
+        .route("/books", get(search_books))
         .with_state(rest_handler)
 }

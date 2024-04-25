@@ -10,7 +10,10 @@ pub struct WireHelper {
 
 impl WireHelper {
     pub fn new(c: &Config) -> Result<Self, Box<dyn std::error::Error>> {
-        let engine = Arc::new(search::ElasticSearchEngine::new(&c.search.address)?);
+        let engine = Arc::new(search::ElasticSearchEngine::new(
+            &c.search.address,
+            c.app.page_size,
+        )?);
         Ok(WireHelper { engine })
     }
 
